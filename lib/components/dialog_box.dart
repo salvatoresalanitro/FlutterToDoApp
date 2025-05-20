@@ -3,7 +3,15 @@ import 'package:todo_app/components/custom_button.dart';
 
 class DialogBox extends StatelessWidget {
   final TextEditingController controller;
-  const DialogBox({super.key, required this.controller});
+  final VoidCallback onSAve;
+  final VoidCallback onCancel;
+
+  const DialogBox({
+    super.key,
+    required this.controller,
+    required this.onSAve,
+    required this.onCancel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,16 +37,12 @@ class DialogBox extends StatelessWidget {
               children: [
                 //save button
 
-                CustomButton(todoText: "Save", onPressed:() {
-                  },
-                ),
+                CustomButton(todoText: "Save", onPressed: onSAve,),
 
                 SizedBox(width: 8,),
 
                 //cancel button
-                CustomButton(todoText: "Cancel", onPressed:() {
-                  },
-                )
+                CustomButton(todoText: "Cancel", onPressed: onCancel,)
               ],
             )
           ],

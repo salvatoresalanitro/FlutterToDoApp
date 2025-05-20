@@ -29,9 +29,19 @@ class _HomePageState extends State<HomePage> {
       builder: (context) {
         return DialogBox(
           controller: _controller,
+          onSAve: _saveNewTask,
+          onCancel: () => Navigator.of(context).pop(),
         );
       }
     );
+  }
+
+  void _saveNewTask() {
+    setState(() {
+      toDoList.add([_controller.text, false]);
+      _controller.clear();
+    });
+    Navigator.of(context).pop();
   }
 
   @override
