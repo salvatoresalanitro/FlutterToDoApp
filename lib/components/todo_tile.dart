@@ -27,7 +27,7 @@ class ToDoTile extends StatelessWidget {
             ),
 
             //Task name
-            Text("Try read this"),
+            Text(taskName),
           ],
         ),
         decoration: BoxDecoration(
