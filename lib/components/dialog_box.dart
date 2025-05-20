@@ -9,6 +9,27 @@ class DialogBox extends StatelessWidget {
       backgroundColor: Colors.yellow[600],
       content: Container(
         height: 120,
+        child: Column(
+          children: [
+            //get user input
+            TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: "Add a new task",
+              ),
+            ),
+
+            //buttons save + cancel
+            Row(
+              children: [
+                //save button
+
+                //cancel button
+                
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
