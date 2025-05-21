@@ -7,7 +7,9 @@ class ToDoTile extends StatelessWidget {
   final Function(bool?)? onChanged;
   final Function(BuildContext)? deleteFunction;
 
-  const ToDoTile({
+  final GlobalKey<TooltipState> _tooltipKey = GlobalKey<TooltipState>();
+
+  ToDoTile({
     super.key,
     required this.taskName,
     required this.taskCompleted,
@@ -48,15 +50,31 @@ class ToDoTile extends StatelessWidget {
 
               //Task name
               Expanded(
-                child: Text(
-                  taskName,
-                  style: TextStyle(
-                    decoration: taskCompleted
-                    ? TextDecoration.lineThrough
-                    : TextDecoration.none
+                child: GestureDetector(
+                  onLongPress: () {
+                    final TooltipState? tooltip = _tooltipKey.currentState;
+                    tooltip?.ensureTooltipVisible();
+                  },
+                  child: Tooltip(
+                    key: _tooltipKey,
+                    message: taskName,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: TextStyle(color: Colors.white),
+                    showDuration: Duration(seconds: 2),
+                    child: Text(
+                      taskName,
+                      style: TextStyle(
+                        decoration: taskCompleted
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
                 ),
               ),
             ],
