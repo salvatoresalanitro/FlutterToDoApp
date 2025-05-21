@@ -16,6 +16,20 @@ class _HomePageState extends State<HomePage> {
   final _toDoBox = Hive.box("ToDoBox");
   ToDoDatabase db = ToDoDatabase();
 
+  @override
+  void initState() {
+
+    if(_toDoBox.get("TODOLIST") != null) {
+      db.loadData();
+    } else {
+      // If is null then is the first time user open the app,
+      //it will create a default data
+      db.CreateInitialPlaceholderData();
+    }
+
+    super.initState();
+  }
+
   final _controller = TextEditingController();
 
   void _checkBoxChanged(bool? value, int index) {
