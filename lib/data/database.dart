@@ -7,7 +7,7 @@ class ToDoDatabase {
   final _toDoBox = Hive.box("ToDoBox");
 
   //it only runs the first time ever opening this app to put placeholder tasks
-  void CreateInitialPlaceholderData() {
+  void createInitialPlaceholderData() {
     toDoList = [
       ["Watched the tutorial how to use the app", true],
       ["Create your first todo", false],

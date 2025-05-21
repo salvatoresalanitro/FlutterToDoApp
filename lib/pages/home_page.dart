@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       // If is null then is the first time user open the app,
       //it will create a default data
-      db.CreateInitialPlaceholderData();
+      db.createInitialPlaceholderData();
     }
 
     super.initState();
