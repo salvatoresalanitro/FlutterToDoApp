@@ -20,7 +20,7 @@ class ToDoDatabase {
   }
 
   //update db
-  void updateDataBase() {
+  void update() {
     _toDoBox.put("TODOLIST", toDoList);
   }
 }
