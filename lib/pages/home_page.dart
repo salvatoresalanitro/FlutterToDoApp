@@ -60,6 +60,28 @@ class _HomePageState extends State<HomePage> {
     db.update();
   }
 
+  void _editTask(int index, bool value){
+    _controller.text = db.toDoList[index][0];
+    showDialog(
+      context: context,
+      builder:(context) {
+        return DialogBox(
+          controller: _controller,
+          onSAve: () => _updateTask(index, value),
+          onCancel: () => Navigator.of(context).pop(),
+        );
+      },
+    );
+  }
+
+  void _updateTask(int index, bool value) {
+    setState(() {
+      db.toDoList[index] = [_controller.text, value];
+    });
+    Navigator.of(context).pop();
+    db.update();
+  }
+
   void _saveNewTask() {
     setState(() {
       db.toDoList.add([_controller.text, false]);
@@ -85,11 +107,16 @@ class _HomePageState extends State<HomePage> {
       body: ListView.builder(
         itemCount: db.toDoList.length,
         itemBuilder:(context, index) {
-          return ToDoTile(
-            taskName: db.toDoList[index][0],
-            taskCompleted: db.toDoList[index][1],
-            onChanged: (value) => _checkBoxChanged(value, index),
-            deleteFunction: (context) => _deleteTask(index),
+          return GestureDetector(
+            onTap:() {
+              _editTask(index, db.toDoList[index][1]);
+            },
+            child: ToDoTile(
+              taskName: db.toDoList[index][0],
+              taskCompleted: db.toDoList[index][1],
+              onChanged: (value) => _checkBoxChanged(value, index),
+              deleteFunction: (context) => _deleteTask(index),
+            ),
           );
         }
       )
