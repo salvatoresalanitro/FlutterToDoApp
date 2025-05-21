@@ -7,7 +7,7 @@ Future<void> main() async {
   await Hive.initFlutter();
 
   // open a box
-  var box = await Hive.box("ToDoBox");
+  var box = await Hive.openBox("ToDoBox");
 
   runApp(const ToDoApp());
 }

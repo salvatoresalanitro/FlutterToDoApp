@@ -13,7 +13,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   //reference the hive box
-  final _toDoBox = Hive.openBox("ToDoBox");
+  final _toDoBox = Hive.box("ToDoBox");
   ToDoDatabase db = ToDoDatabase();
 
   final _controller = TextEditingController();
