@@ -25,6 +25,7 @@ class DialogBox extends StatelessWidget {
             //get user input
             TextField(
               controller: controller,
+              textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: "Add a new task",
