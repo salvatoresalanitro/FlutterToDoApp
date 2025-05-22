@@ -54,12 +54,6 @@ class ToDoTile extends StatelessWidget {
                   activeColor: Colors.brown[500],
                 ),
 
-                //Icon to drag and drop task
-                ReorderableDragStartListener(
-                  index: taskIndex,
-                  child: Icon(Icons.drag_handle, color: Colors.grey,),
-                ),
-
                 //Task name
                 Expanded(
                   child: GestureDetector(
@@ -88,6 +82,12 @@ class ToDoTile extends StatelessWidget {
                       ),
                     ),
                   ),
+                ),
+
+                //Icon to drag and drop task
+                ReorderableDragStartListener(
+                  index: taskIndex,
+                  child: Icon(Icons.drag_handle, color: Colors.grey,),
                 ),
               ],
             ),
