@@ -121,7 +121,6 @@ class _HomePageState extends State<HomePage> {
         child: Icon(Icons.add),
       ),
       body: ReorderableListView.builder(
-        buildDefaultDragHandles: false,
         itemCount: db.toDoList.length,
         proxyDecorator: (child, index, animation) {
           return Material(
