@@ -4,8 +4,10 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 class ToDoTile extends StatelessWidget {
   final String taskName;
   final bool taskCompleted;
+  final int taskIndex;
   final Function(bool?)? onChanged;
   final Function(BuildContext)? deleteFunction;
+  final VoidCallback? onTap;
 
   final GlobalKey<TooltipState> _tooltipKey = GlobalKey<TooltipState>();
 
@@ -15,6 +17,8 @@ class ToDoTile extends StatelessWidget {
     required this.taskCompleted,
     required this.onChanged,
     required this.deleteFunction,
+    required this.taskIndex,
+    required this.onTap,
   });
 
   @override
@@ -33,51 +37,60 @@ class ToDoTile extends StatelessWidget {
             )
           ]
         ),
-        child: Container(
-          padding: EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.yellow[600],
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            children: [
-              //checkbox
-              Checkbox(
-                value: taskCompleted,
-                onChanged: onChanged,
-                activeColor: Colors.brown[500],
-              ),
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.yellow[600],
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                //checkbox
+                Checkbox(
+                  value: taskCompleted,
+                  onChanged: onChanged,
+                  activeColor: Colors.brown[500],
+                ),
 
-              //Task name
-              Expanded(
-                child: GestureDetector(
-                  onLongPress: () {
-                    final TooltipState? tooltip = _tooltipKey.currentState;
-                    tooltip?.ensureTooltipVisible();
-                  },
-                  child: Tooltip(
-                    key: _tooltipKey,
-                    message: taskName,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    textStyle: TextStyle(color: Colors.white),
-                    showDuration: Duration(seconds: 2),
-                    child: Text(
-                      taskName,
-                      style: TextStyle(
-                        decoration: taskCompleted
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none
+                //Icon to drag and drop task
+                ReorderableDragStartListener(
+                  index: taskIndex,
+                  child: Icon(Icons.drag_handle, color: Colors.grey,),
+                ),
+
+                //Task name
+                Expanded(
+                  child: GestureDetector(
+                    onLongPress: () {
+                      final TooltipState? tooltip = _tooltipKey.currentState;
+                      tooltip?.ensureTooltipVisible();
+                    },
+                    child: Tooltip(
+                      key: _tooltipKey,
+                      message: taskName,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+                      textStyle: TextStyle(color: Colors.white),
+                      showDuration: Duration(seconds: 2),
+                      child: Text(
+                        taskName,
+                        style: TextStyle(
+                          decoration: taskCompleted
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

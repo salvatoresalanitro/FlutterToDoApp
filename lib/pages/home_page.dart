@@ -87,6 +87,17 @@ class _HomePageState extends State<HomePage> {
     db.update();
   }
 
+  void orderTaskPosition(int oldIndex, int newIndex) {
+    setState(() {
+      if(newIndex > oldIndex) {
+        newIndex--;
+      }
+      final task = db.toDoList.removeAt(oldIndex);
+      db.toDoList.insert(newIndex, task);
+      db.update();
+    });
+  }
+
   void _saveNewTask() {
     setState(() {
       db.toDoList.add([_controller.text, false]);
@@ -109,20 +120,22 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.yellow[600],
         child: Icon(Icons.add),
       ),
-      body: ListView.builder(
+      body: ReorderableListView.builder(
         itemCount: db.toDoList.length,
+        onReorder: (oldIndex, newIndex) {
+         orderTaskPosition(oldIndex, newIndex);
+        },
         itemBuilder:(context, index) {
-          return GestureDetector(
-            onTap:() {
-              _editTask(index, db.toDoList[index][1]);
-            },
-            child: ToDoTile(
+          return
+            ToDoTile(
+              key: ValueKey(index),
               taskName: db.toDoList[index][0],
               taskCompleted: db.toDoList[index][1],
               onChanged: (value) => _checkBoxChanged(value, index),
               deleteFunction: (context) => _deleteTask(index),
-            ),
-          );
+              taskIndex: index,
+              onTap: () => _editTask(index, db.toDoList[index][1]),
+            );
         }
       )
     );
