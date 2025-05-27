@@ -55,6 +55,14 @@ class _HomePageState extends State<HomePage> {
     db.update();
   }
 
+  Iterable<dynamic> _getTodos() {
+    return db.toDoList.where((task) {
+          if(taskFilterType == TaskFilterType.tasksCompleted) return task[1] == true;
+          if(taskFilterType == TaskFilterType.tasksPending) return task[1] == false;
+          return true;
+        });
+  }
+
   void _deleteTask(int index) {
     setState(() {
       db.toDoList.removeAt(index);
@@ -157,12 +165,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: ReorderableListView.builder(
-        itemCount: db.toDoList.where((task) {
-          if(taskFilterType == TaskFilterType.tasksCompleted) return task[1] == true;
-          if(taskFilterType == TaskFilterType.tasksPending) return task[1] == false;
-          return true;
-        }).length,
-
+        itemCount: _getTodos().length,
         proxyDecorator: (child, index, animation) {
           return Material(
             elevation: 0,
@@ -173,15 +176,8 @@ class _HomePageState extends State<HomePage> {
         onReorder: (oldIndex, newIndex) {
          orderTaskPosition(oldIndex, newIndex);
         },
-
-
         itemBuilder:(context, index) {
-
-          var filteredList = db.toDoList.where((task) {
-            if(taskFilterType == TaskFilterType.tasksCompleted) return task[1] == true;
-            if(taskFilterType == TaskFilterType.tasksPending) return task[1] == false;
-            return true;
-          }).toList();
+          var filteredList = _getTodos().toList();
 
           return
             ToDoTile(
