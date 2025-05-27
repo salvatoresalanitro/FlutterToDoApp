@@ -57,10 +57,15 @@ class _HomePageState extends State<HomePage> {
 
   Iterable<dynamic> _getTodos() {
     return db.toDoList.where((task) {
-          if(taskFilterType == TaskFilterType.tasksCompleted) return task[1] == true;
-          if(taskFilterType == TaskFilterType.tasksPending) return task[1] == false;
+      switch (taskFilterType) {
+        case TaskFilterType.tasksCompleted:
+          return task[1] == true;
+        case TaskFilterType.tasksPending:
+          return task[1] == false;
+        default:
           return true;
-        });
+      }
+    });
   }
 
   void _deleteTask(int index) {
