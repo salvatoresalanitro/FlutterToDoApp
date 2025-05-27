@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:todo_app/pages/home_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -8,6 +9,10 @@ Future<void> main() async {
 
   // open a box
   await Hive.openBox("ToDoBox");
+
+  // hide system bar
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   runApp(const ToDoApp());
 }
