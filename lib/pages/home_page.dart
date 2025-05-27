@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:todo_app/Entities/task_filter_type.dart';
 import 'package:todo_app/components/dialog_box.dart';
 import 'package:todo_app/components/todo_tile.dart';
 import 'package:todo_app/data/database.dart';
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   final _controller = TextEditingController();
+  final TaskFilterType taskFilterType = TaskFilterType.allTask;
 
   void _checkBoxChanged(bool? value, int index) {
     setState(() {
@@ -122,7 +124,14 @@ class _HomePageState extends State<HomePage> {
             ),
           )
         ),
+        leading:
+          //sort task
+          IconButton(
+            onPressed: () {},
+            icon: Icon(Icons.sort)
+          ),
         actions: [
+          //add task
           IconButton(
             onPressed: _createNewTask,
             icon: Icon(Icons.add)
