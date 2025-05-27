@@ -122,11 +122,12 @@ class _HomePageState extends State<HomePage> {
             ),
           )
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _createNewTask,
-        backgroundColor: Colors.yellow[600],
-        child: Icon(Icons.add),
+        actions: [
+          IconButton(
+            onPressed: _createNewTask,
+            icon: Icon(Icons.add)
+          )
+        ],
       ),
       body: ReorderableListView.builder(
         itemCount: db.toDoList.length,
@@ -152,7 +153,7 @@ class _HomePageState extends State<HomePage> {
               onTap: () => _editTask(index, db.toDoList[index][1]),
             );
         }
-      )
+      ),
     );
   }
 }

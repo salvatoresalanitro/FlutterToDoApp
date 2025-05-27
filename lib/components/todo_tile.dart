@@ -39,7 +39,7 @@ class ToDoTile extends StatelessWidget {
                   bottomRight: Radius.circular(14.0),
                 ),
 
-                //Is needed to has decoration
+                //Is needed to have decoration
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
