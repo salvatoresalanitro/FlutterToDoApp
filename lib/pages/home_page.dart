@@ -144,6 +144,7 @@ class _HomePageState extends State<HomePage> {
           )
         ),
         leading: PopupMenuButton<TaskFilterType>(
+          color: Colors.yellow[600],
           icon: Icon(Icons.filter_list),
           onSelected: _sortTask,
           itemBuilder: (context) => [
