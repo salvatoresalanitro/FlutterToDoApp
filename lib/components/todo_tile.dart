@@ -29,13 +29,38 @@ class ToDoTile extends StatelessWidget {
           endActionPane: ActionPane(
             motion: StretchMotion(),
             children: [
-              SlidableAction(
+              // Custom slidable to put an effect gradient into
+              CustomSlidableAction(
                 onPressed: deleteFunction,
-                flex: 6,
-                icon: Icons.delete,
-                backgroundColor: Colors.red.shade300,
-                borderRadius: BorderRadius.circular(14),
-              )
+                backgroundColor: Colors.transparent,
+                padding: EdgeInsets.zero, //set padding to 0
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(14.0),
+                  bottomRight: Radius.circular(14.0),
+                ),
+
+                //Is needed to has decoration
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      stops: [0.05, 0.35],
+                      colors: [
+                        Colors.yellow[300] ?? Colors.yellow,
+                        Colors.red.shade300,
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(14.0),
+                      bottomRight: Radius.circular(14.0),
+                    ),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.delete, color: Colors.white),
+                  ),
+                ),
+              ),
             ]
           ),
           child: GestureDetector(
