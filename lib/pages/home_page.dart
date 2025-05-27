@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   final _controller = TextEditingController();
-  final TaskFilterType taskFilterType = TaskFilterType.allTask;
+  TaskFilterType taskFilterType = TaskFilterType.allTask;
 
   void _checkBoxChanged(bool? value, int index) {
     setState(() {
@@ -100,6 +100,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _sortTask(TaskFilterType selectedFilter) {
+    setState(() {
+      taskFilterType = selectedFilter;
+    });
+  }
+
   void _saveNewTask() {
     setState(() {
       db.toDoList.add([_controller.text, false]);
@@ -124,12 +130,24 @@ class _HomePageState extends State<HomePage> {
             ),
           )
         ),
-        leading:
-          //sort task
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.sort)
-          ),
+        leading: PopupMenuButton<TaskFilterType>(
+          icon: Icon(Icons.filter_list),
+          onSelected: _sortTask,
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: TaskFilterType.allTask,
+              child: Text("Tutti i task"),
+            ),
+            PopupMenuItem(
+              value: TaskFilterType.tasksCompleted,
+              child: Text("Completati"),
+            ),
+            PopupMenuItem(
+              value: TaskFilterType.tasksPending,
+              child: Text("Da completare"),
+            ),
+          ],
+        ),
         actions: [
           //add task
           IconButton(
@@ -139,7 +157,12 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: ReorderableListView.builder(
-        itemCount: db.toDoList.length,
+        itemCount: db.toDoList.where((task) {
+          if(taskFilterType == TaskFilterType.tasksCompleted) return task[1] == true;
+          if(taskFilterType == TaskFilterType.tasksPending) return task[1] == false;
+          return true;
+        }).length,
+
         proxyDecorator: (child, index, animation) {
           return Material(
             elevation: 0,
@@ -150,16 +173,25 @@ class _HomePageState extends State<HomePage> {
         onReorder: (oldIndex, newIndex) {
          orderTaskPosition(oldIndex, newIndex);
         },
+
+
         itemBuilder:(context, index) {
+
+          var filteredList = db.toDoList.where((task) {
+            if(taskFilterType == TaskFilterType.tasksCompleted) return task[1] == true;
+            if(taskFilterType == TaskFilterType.tasksPending) return task[1] == false;
+            return true;
+          }).toList();
+
           return
             ToDoTile(
               key: ValueKey(index),
-              taskName: db.toDoList[index][0],
-              taskCompleted: db.toDoList[index][1],
+              taskName: filteredList[index][0],
+              taskCompleted: filteredList[index][1],
               onChanged: (value) => _checkBoxChanged(value, index),
               deleteFunction: (context) => _deleteTask(index),
               taskIndex: index,
-              onTap: () => _editTask(index, db.toDoList[index][1]),
+              onTap: () => _editTask(index, filteredList[index][1]),
             );
         }
       ),
