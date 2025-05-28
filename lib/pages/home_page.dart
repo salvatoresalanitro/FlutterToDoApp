@@ -118,12 +118,36 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _saveNewTask() {
+    if(_controller.text.trim().isEmpty) {
+      _showWarningDialog();
+      return;
+    }
+
     setState(() {
       db.toDoList.add(Todo(taskName: _controller.text, isChecked: false));
       _controller.clear();
     });
     Navigator.of(context).pop();
     db.update();
+  }
+
+  void _showWarningDialog(){
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.yellow[600],
+          title: Text("Attenzione!"),
+          content: Text("Il To Do non può essere vuoto, aggiungi del testo nel To Do."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Ok"),
+            )
+          ],
+        );
+      }
+    );
   }
 
   @override
