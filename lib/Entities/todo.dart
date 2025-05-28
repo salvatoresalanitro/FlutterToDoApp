@@ -6,7 +6,7 @@ class Todo {
   final bool isChecked;
 
   Todo({String? id, required this.taskName, required this.isChecked})
-    : id = id?? const Uuid().v4(); //generate an unique Id if it is null
+    : id = id ?? const Uuid().v4(); //generate an unique Id if it is null
 
   Todo copyWith({String? taskName, bool? isChecked}){
     return Todo(
