@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo_app/Entities/task_filter_type.dart';
+import 'package:todo_app/Entities/todo.dart';
 import 'package:todo_app/components/dialog_box.dart';
 import 'package:todo_app/components/todo_tile.dart';
 import 'package:todo_app/data/database.dart';
@@ -17,6 +18,9 @@ class _HomePageState extends State<HomePage> {
   final _toDoBox = Hive.box("ToDoBox");
   ToDoDatabase db = ToDoDatabase();
 
+  final _controller = TextEditingController();
+  TaskFilterType taskFilterType = TaskFilterType.allTask;
+
   @override
   void initState() {
 
@@ -31,12 +35,9 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
-  final _controller = TextEditingController();
-  TaskFilterType taskFilterType = TaskFilterType.allTask;
-
   void _checkBoxChanged(bool? value, int index) {
     setState(() {
-      db.toDoList[index][1] = value;
+      db.toDoList[index] = db.toDoList[index].copyWith(isChecked: value);
     });
     db.update();
   }
@@ -55,13 +56,13 @@ class _HomePageState extends State<HomePage> {
     db.update();
   }
 
-  Iterable<dynamic> _getTodos() {
-    return db.toDoList.where((task) {
+  Iterable<Todo> _getTodos() {
+    return db.toDoList.where((todo) {
       switch (taskFilterType) {
         case TaskFilterType.tasksCompleted:
-          return task[1] == true;
+          return todo.isChecked == true;
         case TaskFilterType.tasksPending:
-          return task[1] == false;
+          return todo.isChecked == false;
         default:
           return true;
       }
@@ -77,10 +78,8 @@ class _HomePageState extends State<HomePage> {
 
   void _editTask(int index, bool value){
     TextEditingController editingController = TextEditingController(
-      text: db.toDoList[index][0],
+      text: db.toDoList[index].taskName,
     );
-
-    editingController.text = db.toDoList[index][0];
 
     showDialog(
       context: context,
@@ -96,7 +95,7 @@ class _HomePageState extends State<HomePage> {
 
   void _updateTask(int index, bool value, String newTaskText) {
     setState(() {
-      db.toDoList[index] = [newTaskText, value];
+      db.toDoList[index] = db.toDoList[index].copyWith(taskName: newTaskText, isChecked: value);
     });
     Navigator.of(context).pop();
     db.update();
@@ -107,8 +106,8 @@ class _HomePageState extends State<HomePage> {
       if(newIndex > oldIndex) {
         newIndex--;
       }
-      final task = db.toDoList.removeAt(oldIndex);
-      db.toDoList.insert(newIndex, task);
+      final todo = db.toDoList.removeAt(oldIndex);
+      db.toDoList.insert(newIndex, todo);
       db.update();
     });
   }
@@ -121,7 +120,7 @@ class _HomePageState extends State<HomePage> {
 
   void _saveNewTask() {
     setState(() {
-      db.toDoList.add([_controller.text, false]);
+      db.toDoList.add(Todo(taskName: _controller.text, isChecked: false));
       _controller.clear();
     });
     Navigator.of(context).pop();
@@ -183,17 +182,17 @@ class _HomePageState extends State<HomePage> {
          orderTaskPosition(oldIndex, newIndex);
         },
         itemBuilder:(context, index) {
-          var filteredList = _getTodos().toList();
+          var filteredTodos = _getTodos().toList();
 
           return
             ToDoTile(
               key: ValueKey(index),
-              taskName: filteredList[index][0],
-              taskCompleted: filteredList[index][1],
+              taskName: filteredTodos[index].taskName,
+              taskCompleted: filteredTodos[index].isChecked,
               onChanged: (value) => _checkBoxChanged(value, index),
               deleteFunction: (context) => _deleteTask(index),
               taskIndex: index,
-              onTap: () => _editTask(index, filteredList[index][1]),
+              onTap: () => _editTask(index, filteredTodos[index].isChecked),
             );
         }
       ),
