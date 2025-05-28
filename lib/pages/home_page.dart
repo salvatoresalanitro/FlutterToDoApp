@@ -23,7 +23,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-
     if(_toDoBox.get("TODOLIST") != null) {
       db.loadData();
     } else {
@@ -183,16 +182,20 @@ class _HomePageState extends State<HomePage> {
         },
         itemBuilder:(context, index) {
           var filteredTodos = _getTodos().toList();
+          var isLastItem = index == filteredTodos.length - 1;
 
           return
-            ToDoTile(
-              key: ValueKey(index),
-              taskName: filteredTodos[index].taskName,
-              taskCompleted: filteredTodos[index].isChecked,
-              onChanged: (value) => _checkBoxChanged(value, index),
-              deleteFunction: (context) => _deleteTask(index),
-              taskIndex: index,
-              onTap: () => _editTask(index, filteredTodos[index].isChecked),
+            Padding(
+              key: ValueKey(filteredTodos[index].id),
+              padding: EdgeInsets.only(bottom: isLastItem ? 25 : 0),
+              child: ToDoTile(
+                taskName: filteredTodos[index].taskName,
+                taskCompleted: filteredTodos[index].isChecked,
+                onChanged: (value) => _checkBoxChanged(value, index),
+                deleteFunction: (context) => _deleteTask(index),
+                taskIndex: index,
+                onTap: () => _editTask(index, filteredTodos[index].isChecked),
+              ),
             );
         }
       ),
