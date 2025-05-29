@@ -92,8 +92,40 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
-
   }
+
+  void _renameWorkspace(Workspace workspace) {
+    TextEditingController _wsController = TextEditingController(text: workspace.workspaceName);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Rinomina Workspace"),
+          content: TextField(controller: _wsController),
+          actions: [
+            TextButton(
+              onPressed: () {
+                if (_wsController.text.trim().isNotEmpty) {
+                  setState(() {
+                    workspace.workspaceName = _wsController.text.trim();
+                  });
+                  db.update();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text("Salva"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Annulla"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   Iterable<Todo> _getTodos() {
     Workspace activeWorkSpace = _getActiveWorkspace();
