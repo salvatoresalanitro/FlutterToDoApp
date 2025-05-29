@@ -177,35 +177,44 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.yellow[300],
       appBar: AppBar(
         backgroundColor: Colors.yellow[600],
-        title: Center(
-          child: Text(
-            "TO DO",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          )
+        title: Text(
+          "TO DO",
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        leading: PopupMenuButton<TaskFilterType>(
-          color: Colors.yellow[600],
-          icon: Icon(Icons.filter_list),
-          onSelected: _sortTask,
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: TaskFilterType.allTask,
-              child: Text("Tutti i task"),
-            ),
-            PopupMenuItem(
-              value: TaskFilterType.tasksCompleted,
-              child: Text("Completati"),
-            ),
-            PopupMenuItem(
-              value: TaskFilterType.tasksPending,
-              child: Text("Da completare"),
-            ),
-          ],
+        centerTitle: true,
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              icon: Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer(); // Usa il contesto corretto per aprire il Drawer
+              },
+            );
+          },
         ),
         actions: [
+          PopupMenuButton<TaskFilterType>(
+            color: Colors.yellow[600],
+            icon: Icon(Icons.filter_list),
+            onSelected: _sortTask,
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: TaskFilterType.allTask,
+                child: Text("Tutti i task"),
+              ),
+              PopupMenuItem(
+                value: TaskFilterType.tasksCompleted,
+                child: Text("Completati"),
+              ),
+              PopupMenuItem(
+                value: TaskFilterType.tasksPending,
+                child: Text("Da completare"),
+              ),
+            ],
+          ),
           //add task
           IconButton(
             onPressed: _createNewTask,
@@ -214,6 +223,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       drawer: Drawer(
+        backgroundColor: Colors.yellow[600],
         child: ListView(
           children: db.workspaces.map(
             (ws) => ListTile(
