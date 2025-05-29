@@ -78,13 +78,13 @@ class _HomePageState extends State<HomePage> {
           actions: [
             TextButton(
               onPressed: () {
-                if (wsController.text.trim().isNotEmpty) {
-                  setState(() {
-                    db.workspaces.add(Workspace(workspaceName: wsController.text.trim()));
-                    db.update();
-                  });
-                  Navigator.of(context).pop();
-                }
+                setState(() {
+                  Workspace newWorkspace = Workspace(workspaceName: wsController.text);
+                  db.workspaces.add(newWorkspace);
+                  selectedWorkspace = newWorkspace.id;
+                  db.update();
+                });
+                Navigator.of(context).pop();
               },
               child: Text("Crea"),
             ),
@@ -112,7 +112,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 if (wsController.text.trim().isNotEmpty) {
                     setState(() {
-                      int index = db.workspaces.indexWhere((x) => x.id == selectedWorkspace);
+                      int index = db.workspaces.indexWhere((x) => x.id == workspace.id);
                       if (index != -1) {
                         db.workspaces[index] = workspace.copyWith(workspaceName: wsController.text.trim());
                         db.update();
@@ -179,9 +179,10 @@ class _HomePageState extends State<HomePage> {
 
   Workspace _getActiveWorkspace() {
     Workspace activeWorkSpace = db.workspaces.firstWhere(
-        (ws) => ws.id == selectedWorkspace ,
-        orElse: () => db.workspaces.first,
+        (ws) => ws.id == selectedWorkspace,
+        orElse: () => Workspace.empty(),
       );
+
     return activeWorkSpace;
   }
 

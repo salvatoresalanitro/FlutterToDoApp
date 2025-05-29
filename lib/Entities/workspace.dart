@@ -10,6 +10,11 @@ class Workspace {
     : id = id ?? const Uuid().v4(),
     todos = todos ?? [];
 
+  Workspace.empty()
+    : id = const Uuid().v4(),
+    workspaceName = "",
+    todos = [];
+
   Workspace copyWith({String? workspaceName}) {
     return Workspace(
       id: id,

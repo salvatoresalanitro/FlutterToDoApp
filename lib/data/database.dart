@@ -20,7 +20,7 @@ class ToDoDatabase {
 
   //load the data from db
   void loadData() {
-    var rawData = _toDoBox.get("WORKSPACES", defaultValue: []);
+    var rawData = _toDoBox.get("WORKSPACES");
     workspaces = (rawData as List).map((ws) => Workspace(
       id: ws["id"],
       workspaceName: ws["name"],
