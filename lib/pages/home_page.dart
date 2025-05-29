@@ -224,17 +224,24 @@ class _HomePageState extends State<HomePage> {
       ),
       drawer: Drawer(
         backgroundColor: Colors.yellow[600],
-        child: ListView(
-          children: db.workspaces.map(
-            (ws) => ListTile(
-              title: Text(ws.workspaceName),
-              onTap: () {
-                setState(() {
-                  selectedWorkspace = ws.id;
-                });
-                Navigator.of(context).pop();
-              },
-            )).toList(),
+        child: Column(
+          children: [
+            Divider(),
+            Expanded(
+              child: ListView(
+                children: db.workspaces.map(
+                  (ws) => ListTile(
+                    title: Text(ws.workspaceName),
+                    onTap: () {
+                      setState(() {
+                        selectedWorkspace = ws.id;
+                      });
+                      Navigator.of(context).pop();
+                    },
+                  )).toList(),
+              ),
+            ),
+          ],
         ),
       ),
       body: ReorderableListView.builder(
