@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> {
   final _controller = TextEditingController();
   TaskFilterType taskFilterType = TaskFilterType.allTask;
 
-  String selectedWorkspace = "Generale";
+  String selectedWorkspace = "";
 
   @override
   void initState() {
@@ -32,6 +32,10 @@ class _HomePageState extends State<HomePage> {
       // If is null then is the first time user open the app,
       //it will create a default data
       db.createInitialPlaceholderData();
+    }
+
+    if(db.workspaces.isNotEmpty){
+      selectedWorkspace = db.workspaces.first.id;
     }
 
     super.initState();
@@ -107,10 +111,13 @@ class _HomePageState extends State<HomePage> {
             TextButton(
               onPressed: () {
                 if (wsController.text.trim().isNotEmpty) {
-                  setState(() {
-                    workspace = workspace.copyWith(workspaceName: wsController.text.trim());
-                  });
-                  db.update();
+                    setState(() {
+                      int index = db.workspaces.indexWhere((x) => x.id == selectedWorkspace);
+                      if (index != -1) {
+                        db.workspaces[index] = workspace.copyWith(workspaceName: wsController.text.trim());
+                        db.update();
+                      }
+                    });
                   Navigator.of(context).pop();
                 }
               },
@@ -125,6 +132,35 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
+  void _deleteWorkspace(Workspace workspace) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Conferma eliminazione"),
+          content: Text("Sicuro che vuoi rimuovere l'intero workspace?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  db.workspaces.remove(workspace);
+                  db.update();
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text("Si"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("No"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   Iterable<Todo> _getTodos() {
     Workspace activeWorkSpace = _getActiveWorkspace();
@@ -257,7 +293,7 @@ class _HomePageState extends State<HomePage> {
             return IconButton(
               icon: Icon(Icons.menu),
               onPressed: () {
-                Scaffold.of(context).openDrawer(); // Usa il contesto corretto per aprire il Drawer
+                Scaffold.of(context).openDrawer(); // Using the correct context to use the Drawer
               },
             );
           },
@@ -316,6 +352,22 @@ class _HomePageState extends State<HomePage> {
                 children: db.workspaces.map(
                   (ws) => ListTile(
                     title: Text(ws.workspaceName),
+                    trailing: SizedBox(
+                      width: 100,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            onPressed: () => _renameWorkspace(ws),
+                            icon: Icon(Icons.edit),
+                          ),
+                          IconButton(
+                            onPressed:() => _deleteWorkspace(ws),
+                            icon: Icon(Icons.delete)
+                          )
+                        ],
+                      ),
+                    ),
                     onTap: () {
                       setState(() {
                         selectedWorkspace = ws.id;

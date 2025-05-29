@@ -10,11 +10,11 @@ class Workspace {
     : id = id ?? const Uuid().v4(),
     todos = todos ?? [];
 
-  Workspace copyWith({String? workspaceName, List<Todo>? todos}) {
+  Workspace copyWith({String? workspaceName}) {
     return Workspace(
       id: id,
-      workspaceName: this.workspaceName,
-      todos: this.todos
+      workspaceName: workspaceName ?? this.workspaceName,
+      todos: todos
     );
   }
 }
