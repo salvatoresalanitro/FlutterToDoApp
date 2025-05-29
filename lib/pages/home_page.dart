@@ -95,20 +95,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _renameWorkspace(Workspace workspace) {
-    TextEditingController _wsController = TextEditingController(text: workspace.workspaceName);
+    TextEditingController wsController = TextEditingController(text: workspace.workspaceName);
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text("Rinomina Workspace"),
-          content: TextField(controller: _wsController),
+          content: TextField(controller: wsController),
           actions: [
             TextButton(
               onPressed: () {
-                if (_wsController.text.trim().isNotEmpty) {
+                if (wsController.text.trim().isNotEmpty) {
                   setState(() {
-                    workspace.workspaceName = _wsController.text.trim();
+                    workspace = workspace.copyWith(workspaceName: wsController.text.trim());
                   });
                   db.update();
                   Navigator.of(context).pop();
@@ -125,7 +125,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
 
   Iterable<Todo> _getTodos() {
     Workspace activeWorkSpace = _getActiveWorkspace();
