@@ -59,6 +59,42 @@ class _HomePageState extends State<HomePage> {
     db.update();
   }
 
+  void _createNewWorkspace() {
+    TextEditingController wsController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Nuovo Workspace"),
+          content: TextField(
+            controller: wsController,
+            decoration: InputDecoration(hintText: "Nome workspace")
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                if (wsController.text.trim().isNotEmpty) {
+                  setState(() {
+                    db.workspaces.add(Workspace(workspaceName: wsController.text.trim()));
+                    db.update();
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text("Crea"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Annulla"),
+            ),
+          ],
+        );
+      },
+    );
+
+  }
+
   Iterable<Todo> _getTodos() {
     Workspace activeWorkSpace = _getActiveWorkspace();
 
@@ -226,6 +262,23 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.yellow[600],
         child: Column(
           children: [
+            SizedBox(height: 30),
+            SizedBox(
+              width: double.infinity, // Take all width
+              child: TextButton.icon(
+                icon: Icon(Icons.add, size: 24),
+                label: Text(
+                  "Aggiungi Workspace",
+                  style: TextStyle(fontSize: 18),
+                ),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 15),
+                  backgroundColor: Colors.yellow[600],
+                  foregroundColor: Colors.black,
+                ),
+                onPressed: _createNewWorkspace, // Funzione per creare workspace
+              ),
+            ),
             Divider(),
             Expanded(
               child: ListView(
