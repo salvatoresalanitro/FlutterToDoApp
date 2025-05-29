@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo_app/Entities/task_filter_type.dart';
 import 'package:todo_app/Entities/todo.dart';
+import 'package:todo_app/Entities/workspace.dart';
 import 'package:todo_app/components/dialog_box.dart';
 import 'package:todo_app/components/todo_tile.dart';
 import 'package:todo_app/data/database.dart';
@@ -21,9 +22,11 @@ class _HomePageState extends State<HomePage> {
   final _controller = TextEditingController();
   TaskFilterType taskFilterType = TaskFilterType.allTask;
 
+  String selectedWorkspace = "Generale";
+
   @override
   void initState() {
-    if(_toDoBox.get("TODOLIST") != null) {
+    if(_toDoBox.get("WORKSPACES") != null) {
       db.loadData();
     } else {
       // If is null then is the first time user open the app,
@@ -36,7 +39,8 @@ class _HomePageState extends State<HomePage> {
 
   void _checkBoxChanged(bool? value, int index) {
     setState(() {
-      db.toDoList[index] = db.toDoList[index].copyWith(isChecked: value);
+      Workspace activeWorkSpace = _getActiveWorkspace();
+      activeWorkSpace.todos[index] = activeWorkSpace.todos[index].copyWith(isChecked: value);
     });
     db.update();
   }
@@ -56,7 +60,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Iterable<Todo> _getTodos() {
-    return db.toDoList.where((todo) {
+    Workspace activeWorkSpace = _getActiveWorkspace();
+
+    return activeWorkSpace.todos.where((todo) {
       switch (taskFilterType) {
         case TaskFilterType.tasksCompleted:
           return todo.isChecked == true;
@@ -68,16 +74,26 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Workspace _getActiveWorkspace() {
+    Workspace activeWorkSpace = db.workspaces.firstWhere(
+        (ws) => ws.id == selectedWorkspace ,
+        orElse: () => db.workspaces.first,
+      );
+    return activeWorkSpace;
+  }
+
   void _deleteTask(int index) {
     setState(() {
-      db.toDoList.removeAt(index);
+      Workspace activeWorkSpace = _getActiveWorkspace();
+      activeWorkSpace.todos.removeAt(index);
     });
     db.update();
   }
 
   void _editTask(int index, bool value){
+    Workspace activeWorkSpace = _getActiveWorkspace();
     TextEditingController editingController = TextEditingController(
-      text: db.toDoList[index].taskName,
+      text: activeWorkSpace.todos[index].taskName,
     );
 
     showDialog(
@@ -93,22 +109,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _updateTask(int index, bool value, String newTaskText) {
+    Workspace activeWorkSpace = _getActiveWorkspace();
     setState(() {
-      db.toDoList[index] = db.toDoList[index].copyWith(taskName: newTaskText, isChecked: value);
+      activeWorkSpace.todos[index] = activeWorkSpace.todos[index].copyWith(taskName: newTaskText, isChecked: value);
     });
+
     Navigator.of(context).pop();
     db.update();
   }
 
   void orderTaskPosition(int oldIndex, int newIndex) {
+    Workspace activeWorkSpace = _getActiveWorkspace();
     setState(() {
       if(newIndex > oldIndex) {
         newIndex--;
       }
-      final todo = db.toDoList.removeAt(oldIndex);
-      db.toDoList.insert(newIndex, todo);
-      db.update();
+      final todo = activeWorkSpace.todos.removeAt(oldIndex);
+      activeWorkSpace.todos.insert(newIndex, todo);
     });
+
+    db.update();
   }
 
   void _sortTask(TaskFilterType selectedFilter) {
@@ -124,7 +144,8 @@ class _HomePageState extends State<HomePage> {
     }
 
     setState(() {
-      db.toDoList.add(Todo(taskName: _controller.text, isChecked: false));
+      Workspace activeWorkSpace = _getActiveWorkspace();
+      activeWorkSpace.todos.add(Todo(taskName: _controller.text, isChecked: false));
       _controller.clear();
     });
     Navigator.of(context).pop();
@@ -191,6 +212,20 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.add)
           )
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: db.workspaces.map(
+            (ws) => ListTile(
+              title: Text(ws.workspaceName),
+              onTap: () {
+                setState(() {
+                  selectedWorkspace = ws.id;
+                });
+                Navigator.of(context).pop();
+              },
+            )).toList(),
+        ),
       ),
       body: ReorderableListView.builder(
         itemCount: _getTodos().length,
