@@ -118,7 +118,7 @@ class _HomePageState extends State<HomePage> {
     db.update();
   }
 
-  void orderTaskPosition(int oldIndex, int newIndex) {
+  void _orderTaskPosition(int oldIndex, int newIndex) {
     Workspace activeWorkSpace = _getActiveWorkspace();
     setState(() {
       if(newIndex > oldIndex) {
@@ -237,7 +237,7 @@ class _HomePageState extends State<HomePage> {
           );
         },
         onReorder: (oldIndex, newIndex) {
-         orderTaskPosition(oldIndex, newIndex);
+         _orderTaskPosition(oldIndex, newIndex);
         },
         itemBuilder:(context, index) {
           var filteredTodos = _getTodos().toList();
