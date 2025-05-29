@@ -77,15 +77,7 @@ class _HomePageState extends State<HomePage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                setState(() {
-                  Workspace newWorkspace = Workspace(workspaceName: wsController.text);
-                  db.workspaces.add(newWorkspace);
-                  selectedWorkspace = newWorkspace.id;
-                  db.update();
-                });
-                Navigator.of(context).pop();
-              },
+              onPressed: () => _newWorkspace(wsController),
               child: Text("Crea"),
             ),
             TextButton(
@@ -96,6 +88,16 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  void _newWorkspace(TextEditingController wsController) {
+    setState(() {
+      Workspace newWorkspace = Workspace(workspaceName: wsController.text);
+      db.workspaces.add(newWorkspace);
+      selectedWorkspace = newWorkspace.id;
+      db.update();
+    });
+    Navigator.of(context).pop();
   }
 
   void _renameWorkspace(Workspace workspace) {
@@ -109,18 +111,7 @@ class _HomePageState extends State<HomePage> {
           content: TextField(controller: wsController),
           actions: [
             TextButton(
-              onPressed: () {
-                if (wsController.text.trim().isNotEmpty) {
-                    setState(() {
-                      int index = db.workspaces.indexWhere((x) => x.id == workspace.id);
-                      if (index != -1) {
-                        db.workspaces[index] = workspace.copyWith(workspaceName: wsController.text.trim());
-                        db.update();
-                      }
-                    });
-                  Navigator.of(context).pop();
-                }
-              },
+              onPressed: () => _updateWorkspaceName(workspace, wsController),
               child: Text("Salva"),
             ),
             TextButton(
@@ -133,22 +124,28 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _updateWorkspaceName(Workspace workspace, TextEditingController wsController) {
+    setState(() {
+      int indexWorkSpace = db.workspaces.indexWhere((x) => x.id == workspace.id);
+      if (indexWorkSpace != -1) {
+        db.workspaces[indexWorkSpace] = workspace.copyWith(workspaceName: wsController.text.trim());
+        db.update();
+      }
+    });
+
+    Navigator.of(context).pop();
+  }
+
   void _deleteWorkspace(Workspace workspace) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text("Conferma eliminazione"),
-          content: Text("Sicuro che vuoi rimuovere l'intero workspace?"),
+          content: Text("Così facendo rimuoverai l'intero workspace e tutti i suoi todo all'interno, vuoi procedere?"),
           actions: [
             TextButton(
-              onPressed: () {
-                setState(() {
-                  db.workspaces.remove(workspace);
-                  db.update();
-                });
-                Navigator.of(context).pop();
-              },
+              onPressed: () => _removeWorkspace(workspace),
               child: Text("Si"),
             ),
             TextButton(
@@ -159,6 +156,14 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  void _removeWorkspace(Workspace workspace){
+    setState(() {
+      db.workspaces.remove(workspace);
+      db.update();
+    });
+    Navigator.of(context).pop();
   }
 
 
@@ -215,7 +220,8 @@ class _HomePageState extends State<HomePage> {
   void _updateTask(int index, bool value, String newTaskText) {
     Workspace activeWorkSpace = _getActiveWorkspace();
     setState(() {
-      activeWorkSpace.todos[index] = activeWorkSpace.todos[index].copyWith(taskName: newTaskText, isChecked: value);
+      activeWorkSpace.todos[index] = activeWorkSpace.todos[index]
+        .copyWith(taskName: newTaskText, isChecked: value);
     });
 
     Navigator.of(context).pop();
@@ -230,12 +236,16 @@ class _HomePageState extends State<HomePage> {
       }
       final todo = activeWorkSpace.todos.removeAt(oldIndex);
       activeWorkSpace.todos.insert(newIndex, todo);
+      db.update();
     });
 
-    db.update();
   }
 
   void _sortTask(TaskFilterType selectedFilter) {
+    if(db.workspaces.isEmpty) {
+
+    }
+
     setState(() {
       taskFilterType = selectedFilter;
     });
@@ -243,7 +253,7 @@ class _HomePageState extends State<HomePage> {
 
   void _saveNewTask() {
     if(_controller.text.trim().isEmpty) {
-      _showWarningDialog();
+      _showWarningTodoDialog();
       return;
     }
 
@@ -256,7 +266,7 @@ class _HomePageState extends State<HomePage> {
     db.update();
   }
 
-  void _showWarningDialog(){
+  void _showWarningTodoDialog(){
     showDialog(
       context: context,
       builder: (context) {
@@ -302,9 +312,10 @@ class _HomePageState extends State<HomePage> {
         actions: [
           PopupMenuButton<TaskFilterType>(
             color: Colors.yellow[600],
-            icon: Icon(Icons.filter_list),
-            onSelected: _sortTask,
-            itemBuilder: (context) => [
+            icon: Icon(Icons.filter_list, color: db.workspaces.isNotEmpty ? Colors.black : Colors.black26,),
+            onSelected: db.workspaces.isNotEmpty ? _sortTask : null,
+            itemBuilder: (context) => db.workspaces.isNotEmpty
+            ? [
               PopupMenuItem(
                 value: TaskFilterType.allTask,
                 child: Text("Tutti i task"),
@@ -317,12 +328,12 @@ class _HomePageState extends State<HomePage> {
                 value: TaskFilterType.tasksPending,
                 child: Text("Da completare"),
               ),
-            ],
+            ] : [],
           ),
           //add task
           IconButton(
-            onPressed: _createNewTask,
-            icon: Icon(Icons.add)
+            onPressed: db.workspaces.isNotEmpty ? _createNewTask : null,
+            icon: Icon(Icons.add),
           )
         ],
       ),
