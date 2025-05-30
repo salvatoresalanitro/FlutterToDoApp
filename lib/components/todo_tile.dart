@@ -79,7 +79,7 @@ class ToDoTile extends StatelessWidget {
                     Checkbox(
                       value: taskCompleted,
                       onChanged: onChanged,
-                      activeColor: Colors.brown[500],
+                      activeColor: Colors.black,
                     ),
 
                     //Task name
@@ -115,7 +115,7 @@ class ToDoTile extends StatelessWidget {
                     //Icon to drag and drop task
                     ReorderableDragStartListener(
                       index: taskIndex,
-                      child: Icon(Icons.drag_handle, color: Colors.grey,),
+                      child: Icon(Icons.drag_handle, color: Colors.black,),
                     ),
                   ],
                 ),
