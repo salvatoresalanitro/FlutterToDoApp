@@ -348,15 +348,33 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         centerTitle: true,
+        leadingWidth: 170,
         leading: Builder(
           builder: (context) {
-            return IconButton(
-              icon: Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer(); // Using the correct context to use the Drawer
-              },
+            return TextButton(
+              onPressed: () => Scaffold.of(context).openDrawer(), // Using the correct context to use the Drawer,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.menu,
+                    color: Colors.black,
+                  ),
+                  SizedBox(width: 8,),
+                  Expanded(
+                    child: Text(
+                      _getActiveWorkspace().workspaceName,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w400
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
-          },
+          }
         ),
         actions: [
           PopupMenuButton<TaskFilterType>(
@@ -420,7 +438,11 @@ class _HomePageState extends State<HomePage> {
                 itemCount: db.workspaces.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(db.workspaces[index].workspaceName),
+                    title: Text(
+                      db.workspaces[index].workspaceName,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
