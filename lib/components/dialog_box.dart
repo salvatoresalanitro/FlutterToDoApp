@@ -29,7 +29,7 @@ class DialogBox extends StatelessWidget {
               autofocus: true,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: "Add a new task",
+                hintText: "Aggiungi nuovo task",
               ),
             ),
 
@@ -39,12 +39,12 @@ class DialogBox extends StatelessWidget {
               children: [
                 //save button
 
-                CustomButton(todoText: "Save", onPressed: onSAve,),
+                CustomButton(todoText: "Salva", onPressed: onSAve,),
 
                 SizedBox(width: 8,),
 
                 //cancel button
-                CustomButton(todoText: "Cancel", onPressed: onCancel,)
+                CustomButton(todoText: "Annulla", onPressed: onCancel,)
               ],
             )
           ],
