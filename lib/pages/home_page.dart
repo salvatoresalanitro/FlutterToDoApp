@@ -56,7 +56,10 @@ class _HomePageState extends State<HomePage> {
         return DialogBox(
           controller: _controller,
           onSAve: _saveNewTask,
-          onCancel: () => Navigator.of(context).pop(),
+          onCancel: () {
+            _controller.clear();
+            Navigator.of(context).pop();
+          }
         );
       }
     );
@@ -213,7 +216,10 @@ class _HomePageState extends State<HomePage> {
         return DialogBox(
           controller: editingController,
           onSAve: () => _updateTask(index, value, editingController.text),
-          onCancel: () => Navigator.of(context).pop(),
+          onCancel: () {
+            editingController.clear();
+            Navigator.of(context).pop();
+          }
         );
       },
     );
