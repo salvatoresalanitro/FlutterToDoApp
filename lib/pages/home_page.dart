@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> {
   final _controller = TextEditingController();
   TaskFilterType taskFilterType = TaskFilterType.allTask;
 
-  String selectedWorkspace = "";
+  String selectedWorkspaceId = "";
 
   @override
   void initState() {
@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     if(db.workspaces.isNotEmpty){
-      selectedWorkspace = db.workspaces.first.id;
+      selectedWorkspaceId = db.workspaces.first.id;
     }
 
     super.initState();
@@ -99,7 +99,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       Workspace newWorkspace = Workspace(workspaceName: wsController.text);
       db.workspaces.add(newWorkspace);
-      selectedWorkspace = newWorkspace.id;
+      selectedWorkspaceId = newWorkspace.id;
       db.update();
     });
     Navigator.of(context).pop();
@@ -141,7 +141,36 @@ class _HomePageState extends State<HomePage> {
     Navigator.of(context).pop();
   }
 
-  void _deleteWorkspace(Workspace workspace) {
+  void _deleteAllCheckedWorkspaceTask() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Eliminazione task completati"),
+          content: Text("Vuoi eliminare tutti i task completati di questo workspace?"),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  Workspace activeWorkspace = _getActiveWorkspace();
+                  activeWorkspace.todos.removeWhere((todo) => todo.isChecked);
+                  db.update();
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text("Si")
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("No"),
+            )
+          ],
+        );
+      }
+    );
+  }
+
+  void _deleteWorkspace(Workspace workspace, int index) {
     showDialog(
       context: context,
       builder: (context) {
@@ -150,7 +179,7 @@ class _HomePageState extends State<HomePage> {
           content: Text("Così facendo rimuoverai l'intero workspace e tutti i suoi todo all'interno, vuoi procedere?"),
           actions: [
             TextButton(
-              onPressed: () => _removeWorkspace(workspace),
+              onPressed: () => _removeWorkspace(workspace, index),
               child: Text("Si"),
             ),
             TextButton(
@@ -163,14 +192,26 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _removeWorkspace(Workspace workspace){
+  void _removeWorkspace(Workspace workspace, int index){
     setState(() {
       db.workspaces.remove(workspace);
+
+      if(db.workspaces.isNotEmpty) {
+        selectedWorkspaceId = index -1 >= 0
+          ? db.workspaces[index - 1].id
+          : db.workspaces.first.id;
+      }
+      else {
+        selectedWorkspaceId = "";
+      }
+
       db.update();
     });
+
     Navigator.of(context).pop();
   }
 
+  bool _isAnyWorkspaceTodosChecked() => _getActiveWorkspace().todos.any((todo) => todo.isChecked == true);
 
   Iterable<Todo> _getTodos() {
     Workspace activeWorkSpace = _getActiveWorkspace();
@@ -189,7 +230,7 @@ class _HomePageState extends State<HomePage> {
 
   Workspace _getActiveWorkspace() {
     Workspace activeWorkSpace = db.workspaces.firstWhere(
-        (ws) => ws.id == selectedWorkspace,
+        (ws) => ws.id == selectedWorkspaceId,
         orElse: () => Workspace.empty(),
       );
 
@@ -338,6 +379,13 @@ class _HomePageState extends State<HomePage> {
               ),
             ] : [],
           ),
+          //delete all checked tasks
+          IconButton(
+            onPressed: _isAnyWorkspaceTodosChecked()
+                ? _deleteAllCheckedWorkspaceTask
+                : null,
+            icon: Icon(Icons.delete_forever),
+          ),
           //add task
           IconButton(
             onPressed: db.workspaces.isNotEmpty ? _createNewTask : null,
@@ -363,42 +411,37 @@ class _HomePageState extends State<HomePage> {
                   backgroundColor: Colors.yellow[600],
                   foregroundColor: Colors.black,
                 ),
-                onPressed: _createNewWorkspace, // Funzione per creare workspace
+                onPressed: _createNewWorkspace,
               ),
             ),
             Divider(),
             Expanded(
-              child: ListView(
-                children: db.workspaces.map(
-                  (ws) => ListTile(
-                    title: Text(
-                      ws.workspaceName,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    trailing: SizedBox(
-                      width: 100,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            onPressed: () => _renameWorkspace(ws),
-                            icon: Icon(Icons.edit),
-                          ),
-                          IconButton(
-                            onPressed:() => _deleteWorkspace(ws),
-                            icon: Icon(Icons.delete)
-                          )
-                        ],
-                      ),
+              child: ListView.builder(
+                itemCount: db.workspaces.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(db.workspaces[index].workspaceName),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () => _renameWorkspace(db.workspaces[index]),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _deleteWorkspace(db.workspaces[index], index),
+                        ),
+                      ],
                     ),
                     onTap: () {
                       setState(() {
-                        selectedWorkspace = ws.id;
+                        selectedWorkspaceId = db.workspaces[index].id;
                       });
                       Navigator.of(context).pop();
                     },
-                  )).toList(),
+                  );
+                },
               ),
             ),
           ],
