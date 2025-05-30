@@ -363,7 +363,7 @@ class _HomePageState extends State<HomePage> {
               child: ListView(
                 children: db.workspaces.map(
                   (ws) => ListTile(
-                    title: Text(ws.workspaceName),
+                    title: Text(ws.workspaceName, overflow: TextOverflow.ellipsis, maxLines: 1,),
                     trailing: SizedBox(
                       width: 100,
                       child: Row(
