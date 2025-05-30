@@ -73,7 +73,9 @@ class _HomePageState extends State<HomePage> {
           title: Text("Nuovo Workspace"),
           content: TextField(
             controller: wsController,
-            decoration: InputDecoration(hintText: "Nome workspace")
+            decoration: InputDecoration(hintText: "Nome workspace"),
+            textCapitalization: TextCapitalization.sentences,
+            autofocus: true,
           ),
           actions: [
             TextButton(
@@ -363,7 +365,11 @@ class _HomePageState extends State<HomePage> {
               child: ListView(
                 children: db.workspaces.map(
                   (ws) => ListTile(
-                    title: Text(ws.workspaceName, overflow: TextOverflow.ellipsis, maxLines: 1,),
+                    title: Text(
+                      ws.workspaceName,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                     trailing: SizedBox(
                       width: 100,
                       child: Row(
