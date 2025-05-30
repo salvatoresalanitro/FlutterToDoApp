@@ -113,7 +113,11 @@ class _HomePageState extends State<HomePage> {
       builder: (context) {
         return AlertDialog(
           title: Text("Rinomina Workspace"),
-          content: TextField(controller: wsController),
+          content: TextField(
+            controller: wsController,
+            textCapitalization: TextCapitalization.sentences,
+            autofocus: true,
+          ),
           actions: [
             TextButton(
               onPressed: () => _updateWorkspaceName(workspace, wsController),
@@ -348,30 +352,13 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         centerTitle: true,
-        leadingWidth: 170,
         leading: Builder(
           builder: (context) {
             return TextButton(
               onPressed: () => Scaffold.of(context).openDrawer(), // Using the correct context to use the Drawer,
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.menu,
-                    color: Colors.black,
-                  ),
-                  SizedBox(width: 8,),
-                  Expanded(
-                    child: Text(
-                      _getActiveWorkspace().workspaceName,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w400
-                      ),
-                    ),
-                  ),
-                ],
+              child: Icon(
+                Icons.menu,
+                color: Colors.black,
               ),
             );
           }
@@ -437,7 +424,12 @@ class _HomePageState extends State<HomePage> {
               child: ListView.builder(
                 itemCount: db.workspaces.length,
                 itemBuilder: (context, index) {
+                  bool isWorkSpaceSelected = db.workspaces[index].id == selectedWorkspaceId;
+
                   return ListTile(
+                    selected: isWorkSpaceSelected,
+                    selectedColor: Colors.white,
+                    selectedTileColor: Colors.black,
                     title: Text(
                       db.workspaces[index].workspaceName,
                       overflow: TextOverflow.ellipsis,
