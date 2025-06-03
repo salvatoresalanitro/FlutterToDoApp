@@ -1,4 +1,4 @@
-import 'package:todo_app/Entities/todo.dart';
+import 'package:todo_app/models/todo.dart';
 import 'package:uuid/uuid.dart';
 
 class Workspace {
