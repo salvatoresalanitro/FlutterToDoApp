@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:todo_app/pages/home_page.dart';
@@ -13,7 +14,8 @@ Future<void> main() async {
   // hide system bar
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-
+  await Firebase.initializeApp();
+  
   runApp(const ToDoApp());
 }
 
