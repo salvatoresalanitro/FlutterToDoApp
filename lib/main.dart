@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:todo_app/pages/home_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:todo_app/pages/login_page.dart';
+import 'package:todo_app/services/authentication_service';
 
 Future<void> main() async {
   //init the hive
@@ -24,10 +26,24 @@ class ToDoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authService = AuthenticationService();
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
       theme: ThemeData(primarySwatch: Colors.yellow),
+      home: StreamBuilder(
+        stream: authService.authStateChanges,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          }
+          if (snapshot.hasData) {
+            return HomePage();
+          } else {
+            return LoginPage(authenticationService: authService);
+          }
+        },
+      ),
     );
   }
 }

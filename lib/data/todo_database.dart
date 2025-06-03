@@ -53,7 +53,7 @@ class ToDoDatabase {
   }
 
   Future<void> loadFromFirebase(String userId) async {
-    workspaces = await firestore.loadWorkspaces(userId);
+    workspaces = await firestore.getUserWorkspaces(userId);
     update(); // update Hive after fetch
   }
 }

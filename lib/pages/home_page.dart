@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:todo_app/data/firestore_service.dart';
 import 'package:todo_app/models/task_filter_type.dart';
 import 'package:todo_app/models/todo.dart';
 import 'package:todo_app/models/workspace.dart';
@@ -25,21 +27,42 @@ class _HomePageState extends State<HomePage> {
   String selectedWorkspaceId = "";
 
   @override
-  void initState() {
-    if(_toDoBox.get("WORKSPACES") != null) {
+void initState() {
+  _loadUserData();
+  super.initState();
+}
+
+Future<void> _loadUserData() async {
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+
+  if (userId != null) {
+    final firestoreService = FirestoreService();
+    try {
+      db.workspaces = await firestoreService.getUserWorkspaces(userId);
+      if (db.workspaces.isEmpty) {
+        db.createInitialPlaceholderData();
+      }
+      db.update(); // update hive
+    } catch (e) {
+      print("Errore Firestore: $e");
+      if (_toDoBox.get("WORKSPACES") != null) {
+        db.loadData(); // fallback
+      } else {
+        db.createInitialPlaceholderData();
+      }
+    }
+  } else {
+    if (_toDoBox.get("WORKSPACES") != null) {
       db.loadData();
     } else {
-      // If is null then is the first time user open the app,
-      //it will create a default data
       db.createInitialPlaceholderData();
     }
-
-    if(db.workspaces.isNotEmpty){
-      selectedWorkspaceId = db.workspaces.first.id;
-    }
-
-    super.initState();
   }
+
+  if (db.workspaces.isNotEmpty) {
+    selectedWorkspaceId = db.workspaces.first.id;
+  }
+}
 
   void _checkBoxChanged(bool? value, int index) {
     setState(() {
@@ -95,13 +118,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _newWorkspace(TextEditingController wsController) {
+  void _newWorkspace(TextEditingController wsController) async{
+    Workspace newWorkspace = Workspace(workspaceName: wsController.text);
     setState(() {
-      Workspace newWorkspace = Workspace(workspaceName: wsController.text);
       db.workspaces.add(newWorkspace);
       selectedWorkspaceId = newWorkspace.id;
       db.update();
     });
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      await FirestoreService().saveWorkspace(userId, newWorkspace);
+    }
+
     Navigator.of(context).pop();
   }
 
@@ -133,7 +162,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _updateWorkspaceName(Workspace workspace, TextEditingController wsController) {
+  void _updateWorkspaceName(Workspace workspace, TextEditingController wsController) async{
     setState(() {
       int indexWorkSpace = db.workspaces.indexWhere((x) => x.id == workspace.id);
       if (indexWorkSpace != -1) {
@@ -141,6 +170,11 @@ class _HomePageState extends State<HomePage> {
         db.update();
       }
     });
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      await FirestoreService().saveWorkspace(userId, workspace);
+    }
 
     Navigator.of(context).pop();
   }
@@ -196,7 +230,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _removeWorkspace(Workspace workspace, int index){
+  Future<void> _removeWorkspace(Workspace workspace, int index) async {
     setState(() {
       db.workspaces.remove(workspace);
 
@@ -208,9 +242,14 @@ class _HomePageState extends State<HomePage> {
       else {
         selectedWorkspaceId = "";
       }
-
-      db.update();
     });
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if(userId != null) {
+      await FirestoreService().deleteWorkspace(userId, workspace.id);
+    }
+
+    db.update();
 
     Navigator.of(context).pop();
   }
@@ -241,12 +280,17 @@ class _HomePageState extends State<HomePage> {
     return activeWorkSpace;
   }
 
-  void _deleteTask(int index) {
+  void _deleteTask(int index) async{
     setState(() {
       Workspace activeWorkSpace = _getActiveWorkspace();
       activeWorkSpace.todos.removeAt(index);
     });
     db.update();
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      await FirestoreService().saveWorkspace(userId, _getActiveWorkspace());
+    }
   }
 
   void _editTask(int index, bool value){
@@ -270,7 +314,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _updateTask(int index, bool value, String newTaskText) {
+  void _updateTask(int index, bool value, String newTaskText) async {
     Workspace activeWorkSpace = _getActiveWorkspace();
     setState(() {
       activeWorkSpace.todos[index] = activeWorkSpace.todos[index]
@@ -279,6 +323,11 @@ class _HomePageState extends State<HomePage> {
 
     Navigator.of(context).pop();
     db.update();
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      await FirestoreService().saveWorkspace(userId, _getActiveWorkspace());
+    }
   }
 
   void _orderTaskPosition(int oldIndex, int newIndex) {
@@ -304,7 +353,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _saveNewTask() {
+  void _saveNewTask() async{
     if(_controller.text.trim().isEmpty) {
       _showWarningTodoDialog();
       return;
@@ -315,6 +364,12 @@ class _HomePageState extends State<HomePage> {
       activeWorkSpace.todos.add(Todo(taskName: _controller.text, isChecked: false));
       _controller.clear();
     });
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      await FirestoreService().saveWorkspace(userId, _getActiveWorkspace());
+    }
+
     Navigator.of(context).pop();
     db.update();
   }
