@@ -28,8 +28,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
 void initState() {
-  _loadUserData();
   super.initState();
+  _loadUserData();
 }
 
 Future<void> _loadUserData() async {
@@ -59,8 +59,10 @@ Future<void> _loadUserData() async {
     }
   }
 
-  if (db.workspaces.isNotEmpty) {
-    selectedWorkspaceId = db.workspaces.first.id;
+  if (mounted && db.workspaces.isNotEmpty) {
+    setState(() {
+      selectedWorkspaceId = db.workspaces.first.id;
+    });
   }
 }
 
