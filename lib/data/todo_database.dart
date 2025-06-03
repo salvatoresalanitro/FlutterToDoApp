@@ -1,9 +1,11 @@
 import 'package:hive_flutter/adapters.dart';
-import 'package:todo_app/Entities/todo.dart';
-import 'package:todo_app/Entities/workspace.dart';
+import 'package:todo_app/data/firestore_service.dart';
+import 'package:todo_app/models/todo.dart';
+import 'package:todo_app/models/workspace.dart';
 
 class ToDoDatabase {
   List<Workspace> workspaces = [];
+  final firestore = FirestoreService();
 
   //reference box
   final _toDoBox = Hive.box("ToDoBox");
@@ -32,7 +34,6 @@ class ToDoDatabase {
 
   }
 
-
   //update db
   void update() {
     _toDoBox.put("WORKSPACES", workspaces.map((ws) => {
@@ -43,5 +44,16 @@ class ToDoDatabase {
         "isChecked": t.isChecked
       }).toList()
     }).toList());
+  }
+
+  Future<void> syncToFirebase(String userId) async {
+    for (var workspace in workspaces) {
+      await firestore.saveWorkspace(userId, workspace);
+    }
+  }
+
+  Future<void> loadFromFirebase(String userId) async {
+    workspaces = await firestore.loadWorkspaces(userId);
+    update(); // update Hive after fetch
   }
 }
