@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:todo_app/data/firestore_service.dart';
+import 'package:todo_app/data/todo_firestore_service.dart';
+import 'package:todo_app/data/workspace_firestore_service.dart';
 import 'package:todo_app/models/task_filter_type.dart';
 import 'package:todo_app/models/todo.dart';
 import 'package:todo_app/models/workspace.dart';
@@ -27,51 +28,56 @@ class _HomePageState extends State<HomePage> {
   String selectedWorkspaceId = "";
 
   @override
-void initState() {
-  super.initState();
-  _loadUserData();
-}
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
 
-Future<void> _loadUserData() async {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  Future<void> _loadUserData() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
 
-  if (userId != null) {
-    final firestoreService = FirestoreService();
-    try {
-      db.workspaces = await firestoreService.getUserWorkspaces(userId);
-      if (db.workspaces.isEmpty) {
-        db.createInitialPlaceholderData();
+    if (userId != null) {
+      final firestoreService = WorkspaceFirestoreService();
+      try {
+        db.workspaces = await firestoreService.getUserWorkspaces(userId);
+        if (db.workspaces.isEmpty) {
+          db.createInitialPlaceholderData();
+        }
+        db.update(); // update hive
+      } catch (e) {
+        print("Errore Firestore: $e");
+        if (_toDoBox.get("WORKSPACES") != null) {
+          db.loadData(); // fallback
+        } else {
+          db.createInitialPlaceholderData();
+        }
       }
-      db.update(); // update hive
-    } catch (e) {
-      print("Errore Firestore: $e");
+    } else {
       if (_toDoBox.get("WORKSPACES") != null) {
-        db.loadData(); // fallback
+        db.loadData();
       } else {
         db.createInitialPlaceholderData();
       }
     }
-  } else {
-    if (_toDoBox.get("WORKSPACES") != null) {
-      db.loadData();
-    } else {
-      db.createInitialPlaceholderData();
+
+    if (mounted && db.workspaces.isNotEmpty) {
+      setState(() {
+        selectedWorkspaceId = db.workspaces.first.id;
+      });
     }
   }
 
-  if (mounted && db.workspaces.isNotEmpty) {
+  void _checkBoxChanged(bool? value, int index) async{
+    Workspace activeWorkSpace = _getActiveWorkspace();
     setState(() {
-      selectedWorkspaceId = db.workspaces.first.id;
-    });
-  }
-}
-
-  void _checkBoxChanged(bool? value, int index) {
-    setState(() {
-      Workspace activeWorkSpace = _getActiveWorkspace();
       activeWorkSpace.todos[index] = activeWorkSpace.todos[index].copyWith(isChecked: value);
     });
     db.update();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      final todo = _getActiveWorkspace().todos[index];
+      await TodoFirestoreService().updateTodo(userId, activeWorkSpace.id, todo);
+    }
   }
 
   void _createNewTask() {
@@ -130,7 +136,7 @@ Future<void> _loadUserData() async {
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
-      await FirestoreService().saveWorkspace(userId, newWorkspace);
+      await WorkspaceFirestoreService().createOrUpdateWorkspace(userId, newWorkspace);
     }
 
     Navigator.of(context).pop();
@@ -175,13 +181,13 @@ Future<void> _loadUserData() async {
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
-      await FirestoreService().saveWorkspace(userId, workspace);
+      await WorkspaceFirestoreService().renameWorkspace(userId, workspace.id, wsController.text);
     }
 
     Navigator.of(context).pop();
   }
 
-  void _deleteAllCheckedWorkspaceTask() {
+  void _deleteAllCheckedWorkspaceTodos() {
     showDialog(
       context: context,
       builder: (context) {
@@ -190,14 +196,8 @@ Future<void> _loadUserData() async {
           content: Text("Vuoi eliminare tutti i task completati di questo workspace?"),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  Workspace activeWorkspace = _getActiveWorkspace();
-                  activeWorkspace.todos.removeWhere((todo) => todo.isChecked);
-                  db.update();
-                });
-                Navigator.of(context).pop();
-              },
+              onPressed: () =>
+                _removeCompletedTodos(context),
               child: Text("Si")
             ),
             ElevatedButton(
@@ -208,6 +208,28 @@ Future<void> _loadUserData() async {
         );
       }
     );
+  }
+
+  Future<void> _removeCompletedTodos(BuildContext context) async {
+    Workspace activeWorkspace = _getActiveWorkspace();
+    setState(() {
+      activeWorkspace.todos.removeWhere((todo) => todo.isChecked);
+      db.update();
+    });
+    
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if(userId != null) {
+      var firestoreWorkspaces = await WorkspaceFirestoreService().getUserWorkspaces(userId);
+      var fsWorkspace = firestoreWorkspaces.singleWhere((ws) => ws.id == activeWorkspace.id);
+
+      for(var todo in fsWorkspace.todos) {
+        if(todo.isChecked) {
+          await TodoFirestoreService().deleteTodo(userId, fsWorkspace.id, todo.id);
+        }
+      }
+    }
+    
+    Navigator.of(context).pop();
   }
 
   void _deleteWorkspace(Workspace workspace, int index) {
@@ -248,7 +270,7 @@ Future<void> _loadUserData() async {
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if(userId != null) {
-      await FirestoreService().deleteWorkspace(userId, workspace.id);
+      await WorkspaceFirestoreService().deleteWorkspace(userId, workspace.id);
     }
 
     db.update();
@@ -258,7 +280,7 @@ Future<void> _loadUserData() async {
 
   bool _isAnyWorkspaceTodosChecked() => _getActiveWorkspace().todos.any((todo) => todo.isChecked == true);
 
-  Iterable<Todo> _getTodos() {
+  Iterable<Todo> _getSortedTodos() {
     Workspace activeWorkSpace = _getActiveWorkspace();
 
     return activeWorkSpace.todos.where((todo) {
@@ -278,27 +300,26 @@ Future<void> _loadUserData() async {
         (ws) => ws.id == selectedWorkspaceId,
         orElse: () => Workspace.empty(),
       );
-
+      
     return activeWorkSpace;
   }
 
-  void _deleteTask(int index) async{
+  void _deleteTask(Todo todo) async{
     setState(() {
       Workspace activeWorkSpace = _getActiveWorkspace();
-      activeWorkSpace.todos.removeAt(index);
+      activeWorkSpace.todos.remove(todo);
     });
     db.update();
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
-      await FirestoreService().saveWorkspace(userId, _getActiveWorkspace());
+      await TodoFirestoreService().deleteTodo(userId, selectedWorkspaceId, todo.id);
     }
   }
 
-  void _editTask(int index, bool value){
-    Workspace activeWorkSpace = _getActiveWorkspace();
+  void _editTask(Todo todo, bool value){
     TextEditingController editingController = TextEditingController(
-      text: activeWorkSpace.todos[index].taskName,
+      text: todo.taskName,
     );
 
     showDialog(
@@ -306,7 +327,7 @@ Future<void> _loadUserData() async {
       builder:(context) {
         return DialogBox(
           controller: editingController,
-          onSAve: () => _updateTask(index, value, editingController.text),
+          onSAve: () => _updateTask(todo, value, editingController.text),
           onCancel: () {
             editingController.clear();
             Navigator.of(context).pop();
@@ -316,11 +337,13 @@ Future<void> _loadUserData() async {
     );
   }
 
-  void _updateTask(int index, bool value, String newTaskText) async {
+  void _updateTask(Todo todo, bool value, String newTaskText) async {
     Workspace activeWorkSpace = _getActiveWorkspace();
     setState(() {
-      activeWorkSpace.todos[index] = activeWorkSpace.todos[index]
-        .copyWith(taskName: newTaskText, isChecked: value);
+      int todoIndex = activeWorkSpace.todos.indexWhere((td) => td.id == todo.id);
+      if (todoIndex != -1) {
+        activeWorkSpace.todos[todoIndex] = todo.copyWith(taskName: newTaskText, isChecked: value);
+      }
     });
 
     Navigator.of(context).pop();
@@ -328,11 +351,11 @@ Future<void> _loadUserData() async {
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
-      await FirestoreService().saveWorkspace(userId, _getActiveWorkspace());
+      await TodoFirestoreService().renameTodo(userId, activeWorkSpace.id, todo.id, newTaskText);
     }
   }
 
-  void _orderTaskPosition(int oldIndex, int newIndex) {
+  void _orderTaskPosition(int oldIndex, int newIndex) async {
     Workspace activeWorkSpace = _getActiveWorkspace();
     setState(() {
       if(newIndex > oldIndex) {
@@ -343,38 +366,39 @@ Future<void> _loadUserData() async {
       db.update();
     });
 
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      await TodoFirestoreService().updateTodoOrder(userId, activeWorkSpace.id, activeWorkSpace.todos);
+    }
   }
 
   void _sortTask(TaskFilterType selectedFilter) {
-    if(db.workspaces.isEmpty) {
-
-    }
-
     setState(() {
       taskFilterType = selectedFilter;
     });
   }
 
-  void _saveNewTask() async{
-    if(_controller.text.trim().isEmpty) {
+  void _saveNewTask() async {
+    if (_controller.text.trim().isEmpty) {
       _showWarningTodoDialog();
       return;
     }
 
+    final newTodo = Todo(taskName: _controller.text, isChecked: false);
     setState(() {
-      Workspace activeWorkSpace = _getActiveWorkspace();
-      activeWorkSpace.todos.add(Todo(taskName: _controller.text, isChecked: false));
+      _getActiveWorkspace().todos.add(newTodo);
       _controller.clear();
     });
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
-      await FirestoreService().saveWorkspace(userId, _getActiveWorkspace());
+      await TodoFirestoreService().addTodo(userId, selectedWorkspaceId, newTodo);
     }
 
     Navigator.of(context).pop();
     db.update();
   }
+
 
   void _showWarningTodoDialog(){
     showDialog(
@@ -444,7 +468,7 @@ Future<void> _loadUserData() async {
           //delete all checked tasks
           IconButton(
             onPressed: _isAnyWorkspaceTodosChecked()
-                ? _deleteAllCheckedWorkspaceTask
+                ? _deleteAllCheckedWorkspaceTodos
                 : null,
             icon: Icon(Icons.delete_forever),
           ),
@@ -519,7 +543,7 @@ Future<void> _loadUserData() async {
         ),
       ),
       body: ReorderableListView.builder(
-        itemCount: _getTodos().length,
+        itemCount: _getSortedTodos().length,
         proxyDecorator: (child, index, animation) {
           return Material(
             elevation: 0,
@@ -531,7 +555,7 @@ Future<void> _loadUserData() async {
          _orderTaskPosition(oldIndex, newIndex);
         },
         itemBuilder:(context, index) {
-          var filteredTodos = _getTodos().toList();
+          var filteredTodos = _getSortedTodos().toList();
           var isLastItem = index == filteredTodos.length - 1;
 
           return
@@ -542,9 +566,9 @@ Future<void> _loadUserData() async {
                 taskName: filteredTodos[index].taskName,
                 taskCompleted: filteredTodos[index].isChecked,
                 onChanged: (value) => _checkBoxChanged(value, index),
-                deleteFunction: (context) => _deleteTask(index),
+                deleteFunction: (context) => _deleteTask(filteredTodos[index]),
                 taskIndex: index,
-                onTap: () => _editTask(index, filteredTodos[index].isChecked),
+                onTap: () => _editTask(filteredTodos[index], filteredTodos[index].isChecked),
               ),
             );
         }

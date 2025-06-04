@@ -1,11 +1,11 @@
 import 'package:hive_flutter/adapters.dart';
-import 'package:todo_app/data/firestore_service.dart';
+import 'package:todo_app/data/workspace_firestore_service.dart';
 import 'package:todo_app/models/todo.dart';
 import 'package:todo_app/models/workspace.dart';
 
 class ToDoDatabase {
   List<Workspace> workspaces = [];
-  final firestore = FirestoreService();
+  final firestore = WorkspaceFirestoreService();
 
   //reference box
   final _toDoBox = Hive.box("ToDoBox");
@@ -46,14 +46,14 @@ class ToDoDatabase {
     }).toList());
   }
 
-  Future<void> syncToFirebase(String userId) async {
-    for (var workspace in workspaces) {
-      await firestore.saveWorkspace(userId, workspace);
-    }
-  }
+  // Future<void> syncToFirebase(String userId) async {
+  //   for (var workspace in workspaces) {
+  //     await firestore.saveWorkspace(userId, workspace);
+  //   }
+  // }
 
-  Future<void> loadFromFirebase(String userId) async {
-    workspaces = await firestore.getUserWorkspaces(userId);
-    update(); // update Hive after fetch
-  }
+  // Future<void> loadFromFirebase(String userId) async {
+  //   workspaces = await firestore.getUserWorkspaces(userId);
+  //   update(); // update Hive after fetch
+  // }
 }
